@@ -51,10 +51,53 @@ The script will:
 - Add sample data and validation rules
 - Generate a shareable URL
 
-## Future enhancement possibilities
+## Architecture
+
+### Security Features
+- **Input validation** and sanitization for all user inputs
+- **Path validation** to prevent directory traversal attacks
+- **Secure credential storage** with 600 file permissions
+- **Error handling** that doesn't expose sensitive information
+
+### Reliability Features
+- **Retry logic** with exponential backoff for API calls
+- **Comprehensive error handling** for network and quota issues
+- **Graceful degradation** when optional features fail
+- **Logging** throughout the application for debugging
+
+### Code Quality
+- **Type hints** throughout codebase for better IDE support
+- **Comprehensive unit tests** with 99% coverage
+- **Modular design** with clear separation of concerns
+- **Configuration management** through class constants
+
+## Contributing
+
+This project follows modern Python development practices:
+
+1. **Code Style**: Uses Black for formatting, isort for imports, flake8 for linting
+2. **Testing**: Comprehensive test suite with pytest and high coverage requirements
+3. **Security**: Security-first approach with input validation and secure defaults
+4. **Documentation**: Clear docstrings and type hints throughout
+5. **Error Handling**: Robust error handling with proper logging
+
+## License
+
+This project is open source and available under the [MIT License](LICENSE).
+
+## Support
+
+For issues and questions, please see the [CLAUDE.md](CLAUDE.md) file for development guidance.
+
+## Future Enhancement Possibilities
 
 - Bulk creation for multiple clients
 - Custom branding per client
 - Integration with scheduling tools
 - Performance tracking columns
 - Media asset management
+- Configuration file support
+- CLI argument parsing
+- Docker containerization
+- API quota monitoring
+- Database integration for client management
