@@ -20,19 +20,29 @@ The Python script creates a simple, client-friendly content calendar in Google S
 
 ## Setup
 
-1. **Install required packages:**
+1. **Install Poetry:**
 ```bash
-pip install gspread google-auth google-auth-oauthlib google-auth-httplib2
+curl -sSL https://install.python-poetry.org | python3 -
 ```
 
-2. **Get Google API credentials:**
+2. **Install dependencies:**
+```bash
+poetry install
+```
+
+3. **Run the script:**
+```bash
+poetry run python src/content_calendar/calendar_generator.py
+```
+
+4. **Get Google API credentials:**
    - Go to Google Cloud Console
    - Enable Google Sheets API
    - Create credentials (OAuth 2.0) and download as `credentials.json`
 
 3. **Run the script:**
 ```bash
-python content_calendar_generator.py
+poetry run python src/content_calendar/calendar_generator.py
 ```
 
 The script will:
