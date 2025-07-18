@@ -26,6 +26,27 @@ This document outlines the recommended GitHub configuration for the Content Cale
 }
 ```
 
+#### Branch Protection
+
+Branch protection is configured to require:
+- At least 1 approving review before merging
+- Status checks to pass before merging
+- Linear commit history
+- No force pushes
+- No branch deletion
+- Conversation resolution before merging
+
+#### Admin Bypass
+- Repository admins (like `stratofax`) can bypass these requirements
+- Look for the "Merge without waiting for requirements to be met (bypass rules)" option
+- This is only visible to users with bypass privileges
+- Regular contributors will need to get their PRs approved before merging
+
+#### Configuration Notes
+- `enforce_admins` is disabled to allow admin bypass
+- Bypass is configured per-user in the branch protection settings
+- The `develop` branch has similar protection rules
+
 #### Key Protection Settings:
 
 1. **Required Status Checks**
