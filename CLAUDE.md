@@ -37,6 +37,30 @@ poetry run pytest --cov=src/content_calendar --cov-report=term-missing
 poetry run pytest --cov=src/content_calendar --cov-report=html
 ```
 
+## Testing
+
+### Running Tests
+```bash
+# Run all tests
+poetry run pytest
+
+# Run tests with coverage report
+poetry run pytest --cov=src --cov-report=term-missing
+
+# Run a specific test file
+poetry run pytest tests/test_calendar_generator.py -v
+
+# Run tests with detailed output
+poetry run pytest -v --tb=short
+```
+
+### Writing Tests
+- Tests are located in the `tests/` directory
+- Follow the `test_*.py` naming convention
+- Use descriptive test function names starting with `test_`
+- Group related tests in classes when appropriate
+- Use fixtures for common test data and setup
+
 ## Architecture
 
 This is a production-ready Python CLI tool that generates Google Sheets content calendars for clients. The project uses Poetry for dependency management and follows enterprise-grade development practices with comprehensive error handling, security features, and 99% test coverage.

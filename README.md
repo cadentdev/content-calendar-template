@@ -18,6 +18,25 @@ The Python script creates a simple, client-friendly content calendar in Google S
 - Built-in data validation to prevent errors
 - Separate instructions sheet for onboarding
 
+## Development Workflow
+
+This project follows a GitHub Flow workflow with branch protection:
+
+- `main` branch: Production-ready code
+- `develop` branch: Integration branch for features
+- Feature branches: Created from `develop` for new features/fixes
+
+### GitHub Actions
+- Tests run on every push and pull request
+- Code coverage is reported to Codecov
+- Main branch requires all tests to pass before merging
+
+### Branch Protection
+- Require pull request reviews before merging
+- Require status checks to pass before merging
+- Require linear history
+- Restrict who can push to main branch
+
 ## Setup
 
 1. **Install Poetry:**
@@ -30,20 +49,22 @@ curl -sSL https://install.python-poetry.org | python3 -
 poetry install
 ```
 
-3. **Run the script:**
+3. **Get Google API credentials:**
+   - Go to [Google Cloud Console](https://console.cloud.google.com/)
+   - Create a new project or select an existing one
+   - Enable the Google Sheets API
+   - Go to "APIs & Services" > "Credentials"
+   - Click "Create Credentials" > "OAuth client ID"
+   - Select "Desktop app" as the application type
+   - Download the credentials as `credentials.json` in the project root
+
+4. **Run the script:**
 ```bash
 poetry run python src/content_calendar/calendar_generator.py
 ```
-
-4. **Get Google API credentials:**
-   - Go to Google Cloud Console
-   - Enable Google Sheets API
-   - Create credentials (OAuth 2.0) and download as `credentials.json`
-
-3. **Run the script:**
-```bash
-poetry run python src/content_calendar/calendar_generator.py
-```
+   - On first run, it will open a browser window for OAuth authentication
+   - Follow the prompts to authorize the application
+   - A token will be saved for future use
 
 The script will:
 - Authenticate with Google (first time only)
