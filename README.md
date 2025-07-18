@@ -89,6 +89,10 @@ This project is open source and available under the [MIT License](LICENSE).
 
 For issues and questions, please see the [CLAUDE.md](CLAUDE.md) file for development guidance.
 
+## Repository Configuration
+
+For detailed information about branch protection, workflows, and repository settings, see [GitHub Configuration](docs/github_config.md).
+
 ## Future Enhancement Possibilities
 
 - Bulk creation for multiple clients
