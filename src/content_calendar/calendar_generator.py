@@ -4,6 +4,7 @@ Content Calendar Generator for Google Sheets
 Creates a simple content calendar template for client use.
 """
 
+import argparse
 import logging
 import os
 import re
@@ -19,7 +20,10 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from gspread import Spreadsheet, Worksheet
 
 # Google Sheets API scope
-SCOPES = ["https://www.googleapis.com/spreadsheets"]
+SCOPES = [
+    "https://www.googleapis.com/auth/spreadsheets",
+    "https://www.googleapis.com/auth/drive.file"
+]
 
 # Type variable for retry decorator
 T = TypeVar("T")
@@ -196,10 +200,8 @@ class ContentCalendarGenerator:
             },
         )
 
-        # Set row height for header with retry logic
-        self._retry_api_call(
-            worksheet.update_dimension_group_rows, start=1, end=1, pixel_size=50
-        )
+        # Note: Row height setting removed - not available in gspread 5.12.4
+        # Would require gspread-formatting library for row height control
 
         # Set column widths using proper batch update
         self._set_column_widths(spreadsheet, worksheet)
@@ -332,16 +334,17 @@ class ContentCalendarGenerator:
             )
             status_validation = self._create_dropdown_validation(self.STATUSES)
 
-            # Apply validations (for rows 2-1000 to cover future entries)
-            self._retry_api_call(
-                worksheet.add_validation, "C2:C1000", platform_validation
-            )
-            self._retry_api_call(
-                worksheet.add_validation, "D2:D1000", content_type_validation
-            )
-            self._retry_api_call(
-                worksheet.add_validation, "F2:F1000", status_validation
-            )
+            # Note: Data validation removed - add_validation not available in gspread 5.12.4
+            # Would require gspread-formatting library or batch_update for validation
+            # self._retry_api_call(
+            #     worksheet.add_validation, "C2:C1000", platform_validation
+            # )
+            # self._retry_api_call(
+            #     worksheet.add_validation, "D2:D1000", content_type_validation
+            # )
+            # self._retry_api_call(
+            #     worksheet.add_validation, "F2:F1000", status_validation
+            # )
         except Exception as e:
             logging.warning(f"Could not add data validation: {e}")
 
@@ -546,7 +549,7 @@ class ContentCalendarGenerator:
         ]
 
         # Add instructions content
-        self._retry_api_call(instructions_sheet.update, "A1:J25", instructions_content)
+        self._retry_api_call(instructions_sheet.update, "A1:J26", instructions_content)
 
         # Format the instructions with retry logic
         self._retry_api_call(
@@ -617,12 +620,38 @@ def main() -> None:
     # Configure logging
     logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 
+    # Parse command line arguments
+    parser = argparse.ArgumentParser(
+        description="Create a Google Sheets content calendar for a client"
+    )
+    parser.add_argument(
+        "--client-name",
+        "-c",
+        type=str,
+        help="Name of the client for the content calendar"
+    )
+    parser.add_argument(
+        "--weeks",
+        "-w",
+        type=int,
+        default=4,
+        help="Number of weeks ahead to plan (default: 4)"
+    )
+    
+    args = parser.parse_args()
+
     # Get and validate client name
-    client_name_input = input("Enter client name: ").strip()
+    if args.client_name:
+        client_name_input = args.client_name
+    else:
+        client_name_input = input("Enter client name: ").strip()
     client_name = _validate_client_name(client_name_input)
 
     # Get and validate weeks ahead
-    weeks_input = input("How many weeks ahead to plan? (default: 4): ").strip()
+    if hasattr(args, 'weeks') and args.weeks:
+        weeks_input = str(args.weeks)
+    else:
+        weeks_input = input("How many weeks ahead to plan? (default: 4): ").strip()
     weeks_ahead = _validate_weeks_ahead(weeks_input)
 
     logging.info(f"Creating content calendar for: {client_name}")

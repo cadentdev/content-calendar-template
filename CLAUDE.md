@@ -12,8 +12,14 @@ curl -sSL https://install.python-poetry.org | python3 -
 # Install dependencies
 poetry install
 
-# Run the main script
+# Run the main script (interactive mode)
 poetry run python src/content_calendar/calendar_generator.py
+
+# Run with command line arguments (non-interactive)
+poetry run python src/content_calendar/calendar_generator.py --client-name "Acme Corp" --weeks 6
+
+# Show help for command line options
+poetry run python src/content_calendar/calendar_generator.py --help
 ```
 
 ### Development Tools
