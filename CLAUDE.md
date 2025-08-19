@@ -88,13 +88,38 @@ The tool creates professional content calendars with:
 
 ### Authentication Requirements
 
-The script requires:
-1. Google Cloud Console project with Sheets API enabled
-2. OAuth 2.0 credentials downloaded as `credentials.json` (must be in project root)
-3. Configured OAuth consent screen
-4. Proper file permissions (credentials.json should be in current directory only)
+**SECURITY-FIRST SETUP**: This application uses OAuth 2.0 for user authentication, which is the recommended approach for client applications that access user data.
 
-**Security Note**: The application validates that credential files are in the current directory to prevent path traversal attacks.
+#### Initial Setup (One-time)
+1. **Google Cloud Console Setup**:
+   - Create a Google Cloud Console project
+   - Enable the Google Sheets API
+   - Configure OAuth consent screen
+   - Create OAuth 2.0 credentials (Desktop application type)
+   - Download credentials as `credentials.json`
+
+2. **Secure File Placement**:
+   ```bash
+   # Place credentials.json in project root (gitignored for security)
+   mv ~/Downloads/credentials.json ./credentials.json
+   chmod 600 credentials.json  # Restrict to owner-only access
+   ```
+
+#### Security Features
+- **Git Protection**: `credentials.json` and `token.json` are automatically excluded from git commits
+- **Path Validation**: Application validates credential files are in current directory (prevents path traversal)
+- **File Permissions**: Token files stored with 600 permissions (owner-only access)
+- **OAuth Flow**: First run opens browser for secure OAuth consent (creates `token.json`)
+- **Token Refresh**: Automatic token refresh handling for long-running sessions
+
+#### Alternative: Service Account (For Server Applications)
+For production server environments, consider using service accounts instead:
+```bash
+# Download service account key (for server-to-server applications only)
+# Place as service-account-key.json and update code to use ServiceAccountCredentials
+```
+
+**Important**: Never commit credential files to version control. The `.gitignore` is configured to protect these files.
 
 ### File Structure
 
