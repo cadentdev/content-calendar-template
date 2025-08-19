@@ -27,14 +27,8 @@ poetry run isort src/ tests/
 # Linting
 poetry run flake8 src/ tests/
 
-# Run tests
-poetry run pytest
-
-# Run tests with coverage
-poetry run pytest --cov=src/content_calendar --cov-report=term-missing
-
-# Run tests with HTML coverage report
-poetry run pytest --cov=src/content_calendar --cov-report=html
+# Run all tools together (recommended before committing)
+poetry run black src/ tests/ && poetry run isort src/ tests/ && poetry run flake8 src/ tests/ && poetry run pytest --cov=src --cov-report=term-missing
 ```
 
 ## Testing
@@ -44,8 +38,8 @@ poetry run pytest --cov=src/content_calendar --cov-report=html
 # Run all tests
 poetry run pytest
 
-# Run tests with coverage report
-poetry run pytest --cov=src --cov-report=term-missing
+# Run tests with coverage report (matches CI)
+poetry run pytest -v --cov=src --cov-report=term-missing --cov-report=xml
 
 # Run a specific test file
 poetry run pytest tests/test_calendar_generator.py -v
@@ -140,10 +134,27 @@ The comprehensive test suite includes:
 - **Security Tests**: Input sanitization and path validation testing
 - **Error Handling**: Retry logic, timeout handling, and graceful degradation
 
+### Development Workflow
+
+This project follows GitHub Flow with branch protection:
+- `main` branch: Production-ready code (protected)
+- `develop` branch: Integration branch for features
+- Create feature branches from `develop`
+- Pull requests require passing tests and review
+
 ### Development Notes
 
-- Always run tests before committing: `poetry run pytest --cov=src/content_calendar`
+- Always run full test suite before committing: `poetry run pytest -v --cov=src --cov-report=term-missing`
 - Use type hints for all new functions and methods
 - Follow the existing error handling patterns with proper logging
 - Security-first approach: validate all inputs and use secure defaults
 - The main script is interactive and prompts for client name and planning duration, then creates a shareable Google Sheet with the generated calendar
+
+### Authentication Setup
+
+Before running the script for the first time:
+1. Create a Google Cloud Console project
+2. Enable the Google Sheets API
+3. Create OAuth 2.0 credentials (Desktop application)
+4. Download `credentials.json` to the project root
+5. First run will open browser for OAuth consent
