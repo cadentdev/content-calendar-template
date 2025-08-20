@@ -77,6 +77,7 @@ This is a production-ready Python CLI tool that generates Google Sheets content 
 
 The tool creates professional content calendars with:
 - Pre-configured columns (Date, Time, Platform, Content Type, Post Content, Status, Notes)
+- **NEW: Automation tracking columns** (Post ID, Automation Status, n8n Execution ID)
 - Smart data validation dropdowns for platforms, content types, and status values
 - Sample data to demonstrate usage with realistic examples
 - Separate instructions sheet with comprehensive guidelines
@@ -85,6 +86,7 @@ The tool creates professional content calendars with:
 - Secure credential storage with proper file permissions
 - Comprehensive logging for debugging and monitoring
 - Input sanitization and validation for security
+- **NEW: n8n LinkedIn automation integration ready**
 
 ### Dependencies
 
@@ -127,6 +129,58 @@ For production server environments, consider using service accounts instead:
 
 **Important**: Never commit credential files to version control. The `.gitignore` is configured to protect these files.
 
+## LinkedIn Automation with n8n
+
+### Overview
+
+The content calendar now supports automated LinkedIn posting through n8n integration. The enhanced calendar includes automation tracking columns for seamless workflow management.
+
+### New Automation Columns
+
+- **Post ID**: LinkedIn post identifier after successful publishing
+- **Automation Status**: Current posting state
+  - `Pending`: Ready for automation processing
+  - `Queued`: Scheduled for posting
+  - `Processing`: Currently being posted
+  - `Posted`: Successfully published to LinkedIn
+  - `Failed`: Posting failed (check logs)
+  - `Skipped`: Intentionally skipped
+
+- **n8n Execution ID**: Reference to workflow execution for debugging
+
+### Quick Start
+
+1. **Install n8n** (self-hosted recommended - FREE)
+   ```bash
+   docker run -it --rm --name n8n -p 5678:5678 -v ~/.n8n:/home/node/.n8n n8nio/n8n
+   ```
+
+2. **Set up LinkedIn Developer App**
+   - Follow: [LinkedIn Developer Setup Guide](./docs/linkedin-developer-setup.md)
+   - Get Client ID and Client Secret
+
+3. **Import n8n Workflow**
+   - Copy template from `templates/n8n-workflow-template.json`
+   - Import into n8n and configure credentials
+
+4. **Test Automation**
+   - Create calendar with LinkedIn posts
+   - Set Status to "Approved" 
+   - Watch automation process posts
+
+### Benefits
+
+- **Cost-Effective**: Self-hosted n8n is FREE vs $20+/month for alternatives
+- **Full Control**: Your data stays on your servers
+- **Customizable**: Extend workflows with AI, analytics, and more
+- **Scalable**: Handle unlimited posts without per-execution fees
+
+### Documentation
+
+- **Complete Setup Guide**: [docs/n8n-linkedin-automation.md](./docs/n8n-linkedin-automation.md)
+- **LinkedIn Developer Setup**: [docs/linkedin-developer-setup.md](./docs/linkedin-developer-setup.md)
+- **Workflow Template**: [templates/n8n-workflow-template.json](./templates/n8n-workflow-template.json)
+
 ### File Structure
 
 ```
@@ -139,6 +193,13 @@ src/
 tests/
 ├── conftest.py                   # Test configuration and setup
 └── test_calendar_generator.py    # Comprehensive test suite (36 tests)
+
+docs/
+├── n8n-linkedin-automation.md   # Complete n8n setup and workflow guide
+└── linkedin-developer-setup.md  # LinkedIn Developer App configuration
+
+templates/
+└── n8n-workflow-template.json   # Ready-to-import n8n workflow
 ```
 
 ### Code Quality

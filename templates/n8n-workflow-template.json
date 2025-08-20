@@ -1,0 +1,342 @@
+{
+  "name": "LinkedIn Content Calendar Automation",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 15
+            }
+          ]
+        }
+      },
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [
+        240,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "resource": "sheet",
+        "operation": "read",
+        "documentId": "YOUR_SPREADSHEET_ID",
+        "sheetName": "Sheet1",
+        "range": "A:J",
+        "rawData": true
+      },
+      "name": "Read Calendar",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [
+        460,
+        300
+      ],
+      "credentials": {
+        "googleSheetsApi": {
+          "id": "YOUR_GOOGLE_SHEETS_CREDENTIAL_ID",
+          "name": "Google Sheets Service Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Filter and prepare LinkedIn posts for automation\nconst items = [];\nconst headers = $input.first().json[0];\n\n// Find column indices\nconst platformIndex = headers.indexOf('Platform');\nconst statusIndex = headers.indexOf('Status');\nconst automationStatusIndex = headers.indexOf('Automation Status');\nconst postContentIndex = headers.indexOf('Post Content');\nconst dateIndex = headers.indexOf('Date');\nconst timeIndex = headers.indexOf('Time');\n\n// Process each row (skip header)\nfor (let i = 1; i < $input.first().json.length; i++) {\n  const row = $input.first().json[i];\n  \n  // Check if this is a LinkedIn post that needs processing\n  if (row[platformIndex] === 'LinkedIn' && \n      row[statusIndex] === 'Approved' && \n      (row[automationStatusIndex] === 'Pending' || row[automationStatusIndex] === '')) {\n    \n    // Check if it's time to post\n    const scheduledDateTime = new Date(`${row[dateIndex]} ${row[timeIndex]}`);\n    const now = new Date();\n    \n    if (scheduledDateTime <= now) {\n      items.push({\n        json: {\n          content: row[postContentIndex],\n          scheduledTime: scheduledDateTime,\n          rowIndex: i + 1, // +1 because spreadsheet rows are 1-indexed\n          originalRow: row,\n          headers: headers\n        }\n      });\n    }\n  }\n}\n\nreturn items;"
+      },
+      "name": "Filter LinkedIn Posts",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        680,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "c5e9d4b5-e5ad-4c77-8c5d-4a7c2c5e9d4b",
+              "leftValue": "={{ $json.content }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "name": "Validate Content",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        900,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "share",
+        "text": "={{ $json.content }}",
+        "additionalFields": {
+          "visibility": "PUBLIC"
+        }
+      },
+      "name": "Post to LinkedIn",
+      "type": "n8n-nodes-base.linkedIn",
+      "typeVersion": 1,
+      "position": [
+        1120,
+        220
+      ],
+      "credentials": {
+        "linkedInOAuth2Api": {
+          "id": "YOUR_LINKEDIN_CREDENTIAL_ID",
+          "name": "LinkedIn OAuth2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "resource": "sheet",
+        "operation": "update",
+        "documentId": "YOUR_SPREADSHEET_ID",
+        "sheetName": "Sheet1",
+        "range": "={{ 'I' + $('Filter LinkedIn Posts').item.json.rowIndex + ':J' + $('Filter LinkedIn Posts').item.json.rowIndex }}",
+        "options": {
+          "valueInputOption": "RAW"
+        },
+        "dataProperty": "values"
+      },
+      "name": "Update Success Status",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [
+        1340,
+        220
+      ],
+      "credentials": {
+        "googleSheetsApi": {
+          "id": "YOUR_GOOGLE_SHEETS_CREDENTIAL_ID",
+          "name": "Google Sheets Service Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Prepare success status update\nconst linkedInResponse = $input.first().json;\nconst originalData = $('Filter LinkedIn Posts').item.json;\n\nreturn [{\n  json: {\n    values: [[\n      'Posted',\n      $workflow.id + '_' + $execution.id\n    ]]\n  }\n}];"
+      },
+      "name": "Prepare Success Update",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1340,
+        100
+      ]
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "resource": "sheet",
+        "operation": "update",
+        "documentId": "YOUR_SPREADSHEET_ID",
+        "sheetName": "Sheet1",
+        "range": "={{ 'I' + $('Filter LinkedIn Posts').item.json.rowIndex }}",
+        "options": {
+          "valueInputOption": "RAW"
+        },
+        "dataProperty": "values"
+      },
+      "name": "Update Error Status",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [
+        1120,
+        400
+      ],
+      "credentials": {
+        "googleSheetsApi": {
+          "id": "YOUR_GOOGLE_SHEETS_CREDENTIAL_ID",
+          "name": "Google Sheets Service Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Prepare error status update\nreturn [{\n  json: {\n    values: [['Failed']]\n  }\n}];"
+      },
+      "name": "Prepare Error Update",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1120,
+        520
+      ]
+    },
+    {
+      "parameters": {
+        "subject": "LinkedIn Automation Error",
+        "message": "=Failed to post LinkedIn content:\\n\\nContent: {{ $('Filter LinkedIn Posts').item.json.content }}\\nError: {{ $json.error }}\\nTime: {{ $now }}",
+        "options": {}
+      },
+      "name": "Send Error Email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2,
+      "position": [
+        1340,
+        400
+      ],
+      "credentials": {
+        "smtp": {
+          "id": "YOUR_EMAIL_CREDENTIAL_ID",
+          "name": "SMTP Email"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Read Calendar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Calendar": {
+      "main": [
+        [
+          {
+            "node": "Filter LinkedIn Posts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter LinkedIn Posts": {
+      "main": [
+        [
+          {
+            "node": "Validate Content",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Content": {
+      "main": [
+        [
+          {
+            "node": "Post to LinkedIn",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Post to LinkedIn": {
+      "main": [
+        [
+          {
+            "node": "Prepare Success Update",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Success Status": {
+      "main": [
+        []
+      ]
+    },
+    "Prepare Success Update": {
+      "main": [
+        [
+          {
+            "node": "Update Success Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Error Status": {
+      "main": [
+        [
+          {
+            "node": "Send Error Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Error Update": {
+      "main": [
+        [
+          {
+            "node": "Update Error Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Error Email": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "40b8f14e-8c9a-4b1e-9b4a-8c9a4b1e9b4a",
+  "meta": {
+    "templateCredsSetupCompleted": false,
+    "instanceId": "40b8f14e8c9a4b1e9b4a8c9a4b1e9b4a"
+  },
+  "id": "40b8f14e-8c9a-4b1e-9b4a-8c9a4b1e9b4a",
+  "tags": [
+    {
+      "createdAt": "2025-01-19T12:00:00.000Z",
+      "updatedAt": "2025-01-19T12:00:00.000Z",
+      "id": "1",
+      "name": "LinkedIn"
+    },
+    {
+      "createdAt": "2025-01-19T12:00:00.000Z",
+      "updatedAt": "2025-01-19T12:00:00.000Z",
+      "id": "2",
+      "name": "Social Media"
+    },
+    {
+      "createdAt": "2025-01-19T12:00:00.000Z",
+      "updatedAt": "2025-01-19T12:00:00.000Z",
+      "id": "3",
+      "name": "Automation"
+    }
+  ]
+}

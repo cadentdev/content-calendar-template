@@ -22,7 +22,7 @@ from gspread import Spreadsheet, Worksheet
 # Google Sheets API scope
 SCOPES = [
     "https://www.googleapis.com/auth/spreadsheets",
-    "https://www.googleapis.com/auth/drive.file"
+    "https://www.googleapis.com/auth/drive.file",
 ]
 
 # Type variable for retry decorator
@@ -59,6 +59,15 @@ class ContentCalendarGenerator:
         "Scheduled",
         "Published",
         "Cancelled",
+    ]
+
+    AUTOMATION_STATUSES: List[str] = [
+        "Pending",
+        "Queued",
+        "Processing",
+        "Posted",
+        "Failed",
+        "Skipped",
     ]
 
     def __init__(
@@ -181,15 +190,18 @@ class ContentCalendarGenerator:
             "Post Content",
             "Status",
             "Notes",
+            "Post ID",
+            "Automation Status",
+            "n8n Execution ID",
         ]
 
         # Apply headers with retry logic
-        self._retry_api_call(worksheet.update, "A1:G1", [headers])
+        self._retry_api_call(worksheet.update, "A1:J1", [headers])
 
         # Format headers with retry logic
         self._retry_api_call(
             worksheet.format,
-            "A1:G1",
+            "A1:J1",
             {
                 "backgroundColor": {"red": 0.2, "green": 0.6, "blue": 0.9},
                 "textFormat": {
@@ -230,6 +242,9 @@ class ContentCalendarGenerator:
             400,  # Post Content
             100,  # Status
             200,  # Notes
+            150,  # Post ID
+            120,  # Automation Status
+            150,  # n8n Execution ID
         ]
 
         # Create batch update requests for column widths
@@ -274,6 +289,9 @@ class ContentCalendarGenerator:
                 "Share industry insights about digital marketing trends...",
                 "Draft",
                 "Need to add company logo",
+                "",  # Post ID
+                "Pending",  # Automation Status
+                "",  # n8n Execution ID
             ],
             [
                 (current_date + timedelta(days=1)).strftime("%Y-%m-%d"),
@@ -283,6 +301,9 @@ class ContentCalendarGenerator:
                 "Behind-the-scenes content from team meeting",
                 "Planned",
                 "Coordinate with design team",
+                "",  # Post ID
+                "Pending",  # Automation Status
+                "",  # n8n Execution ID
             ],
             [
                 (current_date + timedelta(days=2)).strftime("%Y-%m-%d"),
@@ -292,12 +313,15 @@ class ContentCalendarGenerator:
                 "Client testimonial video - case study feature",
                 "In Review",
                 "Waiting for client approval",
+                "",  # Post ID
+                "Pending",  # Automation Status
+                "",  # n8n Execution ID
             ],
         ]
 
         # Add sample data starting from row 2
         if sample_entries:
-            range_name = f"A2:G{1 + len(sample_entries)}"
+            range_name = f"A2:J{1 + len(sample_entries)}"
             self._retry_api_call(worksheet.update, range_name, sample_entries)
 
         # Add some empty rows with just dates for planning
@@ -305,12 +329,23 @@ class ContentCalendarGenerator:
         for i in range(3, weeks_ahead * 7):  # Start after sample data
             future_date = current_date + timedelta(days=i)
             planning_rows.append(
-                [future_date.strftime("%Y-%m-%d"), "", "", "", "", "Planned", ""]
+                [
+                    future_date.strftime("%Y-%m-%d"),
+                    "",
+                    "",
+                    "",
+                    "",
+                    "Planned",
+                    "",
+                    "",
+                    "Pending",
+                    "",
+                ]
             )
 
         if planning_rows:
             start_row = len(sample_entries) + 2
-            range_name = f"A{start_row}:G{start_row + len(planning_rows) - 1}"
+            range_name = f"A{start_row}:J{start_row + len(planning_rows) - 1}"
             self._retry_api_call(worksheet.update, range_name, planning_rows)
 
     def _create_dropdown_validation(self, values: List[str]) -> Dict[str, Any]:
@@ -628,16 +663,16 @@ def main() -> None:
         "--client-name",
         "-c",
         type=str,
-        help="Name of the client for the content calendar"
+        help="Name of the client for the content calendar",
     )
     parser.add_argument(
         "--weeks",
         "-w",
         type=int,
         default=4,
-        help="Number of weeks ahead to plan (default: 4)"
+        help="Number of weeks ahead to plan (default: 4)",
     )
-    
+
     args = parser.parse_args()
 
     # Get and validate client name
@@ -648,7 +683,7 @@ def main() -> None:
     client_name = _validate_client_name(client_name_input)
 
     # Get and validate weeks ahead
-    if hasattr(args, 'weeks') and args.weeks:
+    if hasattr(args, "weeks") and args.weeks:
         weeks_input = str(args.weeks)
     else:
         weeks_input = input("How many weeks ahead to plan? (default: 4): ").strip()
